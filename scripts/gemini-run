@@ -1,0 +1,26 @@
+#!/bin/bash
+# gemini-run: A wrapper to run markdown files with gemini
+
+# Parse Arguments: Last argument is the file, others are flags
+ARGS=("$@")
+LEN=${#ARGS[@]}
+
+if [ $LEN -lt 1 ]; then
+    echo "Usage: gemini-run [options] <file.md>"
+    exit 1
+fi
+
+LAST_IDX=$((LEN - 1))
+FILE="${ARGS[$LAST_IDX]}"
+FLAGS=("${ARGS[@]:0:$LAST_IDX}")
+
+if [ ! -f "$FILE" ]; then
+    echo "Error: File '$FILE' not found."
+    exit 1
+fi
+
+# Read content skipping the first line (the shebang)
+PROMPT=$(tail -n +2 "$FILE")
+
+# Run gemini with passed flags and the prompt content
+gemini "${FLAGS[@]}" "$PROMPT"
