@@ -1,6 +1,6 @@
-# Executable Markdown with Gemini CLI
+# Executable Markdown with [Gemini CLI](https://geminicli.com/)
 
-This guide explains how to transform standard Markdown files into executable scripts powered by the Gemini CLI. This allows you to create AI-driven automation, pipelines, and autonomous "bots" using simple text files.
+This guide explains how to transform standard Markdown files into executable scripts powered by the [Gemini CLI](https://geminicli.com/). This allows you to create AI-driven automation, pipelines, and autonomous "bots" using simple text files.
 
 ### Quick Look
 Create a file named `weather.md`:
@@ -16,7 +16,7 @@ chmod +x weather.md
 
 ## 1. The Wrapper Script (`gemini-run`)
 
-To handle the shebang and pipe the markdown content correctly into the Gemini CLI, use the following wrapper script.
+To handle the shebang and pipe the markdown content correctly into the [Gemini CLI](https://geminicli.com/), use the following wrapper script.
 
 ### Create the script:
 Save this content as `gemini-run`:
@@ -116,7 +116,7 @@ cat customers.log | ./step1_extract.md | ./step2_analyze.md
 ```
 
 ### Advanced Configuration
-You can pass **any** Gemini CLI argument via the shebang line. This allows you to specify models, output formats, or system prompts for specific scripts.
+You can pass **any** [Gemini CLI](https://geminicli.com/) argument via the shebang line. This allows you to specify models, output formats, or system prompts for specific scripts.
 
 **`json_output.md`**
 ```markdown
@@ -131,7 +131,7 @@ List 3 distinct colors.
 1.  **Shebang Execution**: When you run `./script.md`, the OS sees the `#!` line and executes `/usr/local/bin/gemini-run` with your script as an argument.
 2.  **`env -S`**: Used in the shebang to allow passing flags like `--yolo` on systems like macOS and modern Linux.
 3.  **Prompt Extraction**: The wrapper uses `tail -n +2` to strip the shebang line from the markdown file before sending it to Gemini, ensuring the LLM only sees your instructions.
-4.  **Stdin Integration**: The Gemini CLI automatically appends any data received from a pipe to the prompt provided as an argument, enabling powerful multi-stage workflows.
+4.  **Stdin Integration**: The [Gemini CLI](https://geminicli.com/) automatically appends any data received from a pipe to the prompt provided as an argument, enabling powerful multi-stage workflows.
 
 ---
 
