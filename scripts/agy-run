@@ -1,0 +1,93 @@
+#!/bin/bash
+# agy-run: A wrapper to run markdown files with Antigravity CLI (agy)
+
+# Show help if requested
+if [ "$1" = "-h" ] || [ "$1" = "--help" ]; then
+    echo "Usage: agy-run [options] <file.md>"
+    echo ""
+    echo "Executes a Markdown file as a prompt using Antigravity CLI (agy)."
+    echo ""
+    echo "Options:"
+    echo "  Any flag supported by agy (e.g. --dangerously-skip-permissions, --model <name>, --output-format <format>)."
+    echo "  Legacy --yolo is automatically translated to --dangerously-skip-permissions."
+    echo ""
+    echo "Examples:"
+    echo "  agy-run prompt.md"
+    echo "  agy-run --model gemini-3.8-flash-high --dangerously-skip-permissions prompt.md"
+    echo "  cat data.txt | agy-run prompt.md"
+    exit 0
+fi
+
+# Parse Arguments: Last argument is the file, others are flags
+ARGS=("$@")
+LEN=${#ARGS[@]}
+
+if [ $LEN -lt 1 ]; then
+    echo "Usage: agy-run [options] <file.md>" >&2
+    exit 1
+fi
+
+LAST_IDX=$((LEN - 1))
+FILE="${ARGS[$LAST_IDX]}"
+
+if [ ! -f "$FILE" ]; then
+    echo "Error: File '$FILE' not found." >&2
+    exit 1
+fi
+
+# Ensure agy is installed and in PATH
+if ! command -v agy &>/dev/null; then
+    echo "Error: 'agy' (Antigravity CLI) command not found in PATH." >&2
+    echo "Please ensure Antigravity CLI is installed and available in your PATH." >&2
+    echo "See: https://antigravity.google/docs/cli/reference" >&2
+    exit 1
+fi
+
+# Process flags: translate legacy flags and filter unsupported options
+PROCESSED_FLAGS=()
+skip_next=false
+for ((i=0; i<$LAST_IDX; i++)); do
+    if [ "$skip_next" = true ]; then
+        skip_next=false
+        continue
+    fi
+    arg="${ARGS[$i]}"
+    case "$arg" in
+        --yolo)
+            PROCESSED_FLAGS+=("--dangerously-skip-permissions")
+            ;;
+        --allowed-tools=*|--allowed-mcp-server-names=*)
+            echo "Warning: '$arg' is deprecated in Antigravity CLI and ignored." >&2
+            ;;
+        --allowed-tools|--allowed-mcp-server-names)
+            echo "Warning: '$arg' is deprecated in Antigravity CLI and ignored." >&2
+            skip_next=true
+            ;;
+        *)
+            PROCESSED_FLAGS+=("$arg")
+            ;;
+    esac
+done
+
+# Read content skipping the first line (the shebang)
+PROMPT=$(tail -n +2 "$FILE")
+
+# Capture stderr to a temporary file so pipeline outputs remain clean
+STDERR_FILE=$(mktemp)
+trap 'rm -f "$STDERR_FILE"' EXIT
+
+# Run agy with passed flags and the prompt content
+if [ ! -t 0 ]; then
+    # Stdin is available (pipe): combine prompt and stdin into agy
+    (echo "$PROMPT"; echo ""; cat) | agy "${PROCESSED_FLAGS[@]}" 2>"$STDERR_FILE"
+else
+    # No stdin: pass prompt directly to agy in print mode
+    agy "${PROCESSED_FLAGS[@]}" -p "$PROMPT" 2>"$STDERR_FILE"
+fi
+
+EXIT_CODE=$?
+
+if [ $EXIT_CODE -ne 0 ]; then
+    cat "$STDERR_FILE" >&2
+    exit $EXIT_CODE
+fi

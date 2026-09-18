@@ -1,63 +1,6 @@
 #!/bin/bash
-# gemini-run: A wrapper to run markdown files with Gemini CLI
+# gemini-run: Deprecated wrapper forwarding to agy-run
 
-# Parse Arguments: Last argument is the file, others are flags
-ARGS=("$@")
-LEN=${#ARGS[@]}
-
-if [ $LEN -lt 1 ]; then
-    echo "Usage: gemini-run [options] <file.md>"
-    exit 1
-fi
-
-LAST_IDX=$((LEN - 1))
-FILE="${ARGS[$LAST_IDX]}"
-FLAGS=("${ARGS[@]:0:$LAST_IDX}")
-
-if [ ! -f "$FILE" ]; then
-    echo "Error: File '$FILE' not found."
-    exit 1
-fi
-
-# Ensure GEMINI_API_KEY is set (falling back to GOOGLE_API_KEY) and exported
-export GEMINI_API_KEY="${GEMINI_API_KEY:-$GOOGLE_API_KEY}"
-
-if [ -z "$GEMINI_API_KEY" ]; then
-    echo "Error: API key is missing."
-    echo "Please define either GEMINI_API_KEY or GOOGLE_API_KEY environment variable."
-    exit 1
-fi
-
-# Check for API key validity
-VALIDATION_RESPONSE=$(curl -s "https://generativelanguage.googleapis.com/v1beta/models?key=$GEMINI_API_KEY")
-
-if echo "$VALIDATION_RESPONSE" | grep -q '"error"'; then
-    ERROR_MESSAGE=$(echo "$VALIDATION_RESPONSE" | grep -o '"message": "[^"]*' | head -1 | cut -d'"' -f4)
-    echo "Error: API key validation failed."
-    echo "Message: $ERROR_MESSAGE"
-    exit 1
-fi
-
-# Read content skipping the first line (the shebang)
-PROMPT=$(tail -n +2 "$FILE")
-
-# Capture stderr to a temporary file
-STDERR_FILE=$(mktemp)
-trap 'rm -f "$STDERR_FILE"' EXIT
-
-# Run gemini with passed flags and the prompt content
-# If stdin is available (and not a tty), combine prompt and stdin
-if [ ! -t 0 ]; then
-    # Stdin is available
-    (echo "$PROMPT"; echo ""; cat) | gemini "${FLAGS[@]}" 2>"$STDERR_FILE"
-else
-    # No stdin
-    gemini "${FLAGS[@]}" "$PROMPT" 2>"$STDERR_FILE"
-fi
-
-EXIT_CODE=$?
-
-if [ $EXIT_CODE -ne 0 ]; then
-    cat "$STDERR_FILE" >&2
-    exit $EXIT_CODE
-fi
+DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+echo "Notice: 'gemini-run' is deprecated. Forwarding to 'agy-run'..." >&2
+exec "$DIR/agy-run" "$@"

@@ -1,4 +1,4 @@
-#!/usr/bin/env -S gemini-run --allowed-mcp-server-names=nanobanana
+#!/usr/bin/env -S agy-run --dangerously-skip-permissions
 
 * Find the key points of the article at
   https://glaforge.dev/posts/2026/01/18/implementing-an-arxiv-mcp-server-with-quarkus-in-java/

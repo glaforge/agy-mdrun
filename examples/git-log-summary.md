@@ -1,4 +1,4 @@
-#!/usr/bin/env -S gemini-run --model gemini-2.5-flash --allowed-tools=run_shell_command(git)
+#!/usr/bin/env -S agy-run --model gemini-3.8-flash-high --dangerously-skip-permissions
 
 # GOAL
 
@@ -10,7 +10,7 @@ Follow these steps, one after the other:
 
 # INSTRUCTIONS
 
-* Execute `git log -p --no-merges` to also get the diff for each commit, and to ignore merge commits.
+* Execute `git log -p --no-merges` using `run_command` to also get the diff for each commit, and to ignore merge commits.
 * Don't run any other tools.
 * Don't create Python programs to do the job.
 
